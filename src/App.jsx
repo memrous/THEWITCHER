@@ -1,9 +1,27 @@
-import React from 'react'
+import { useEffect } from 'react'
+import Footer from './components/Footer'
+import GeraltPinned from './components/GeraltPinned'
+import Journey from './components/Journey'
+import Outro from './components/Outro'
+import useReducedMotion from './hooks/useReducedMotion'
+import { initLenis } from './lib/lenis'
 
-const App = () => {
+export default function App() {
+  const reducedMotion = useReducedMotion()
+
+  useEffect(() => {
+    if (reducedMotion) return
+    return initLenis()
+  }, [reducedMotion])
+
   return (
-    <div>App</div>
+    <>
+      <main>
+        <Journey />
+        <GeraltPinned />
+        <Outro />
+      </main>
+      <Footer />
+    </>
   )
 }
-
-export default App
