@@ -24,6 +24,7 @@ raw
 *.njsproj
 *.sln
 *.sw?
+*zip
 
 #claude
 CLAUDE.MD

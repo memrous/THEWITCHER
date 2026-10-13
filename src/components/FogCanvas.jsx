@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import useReducedMotion from '../hooks/useReducedMotion'
 import { gsap, useGSAP } from '../lib/gsap'
+import { whenIdle } from '../lib/idle'
 import { createRandom } from '../lib/random'
 
 const TILE_W = 320
@@ -81,8 +82,10 @@ export default function FogCanvas({
   const canvasRef = useRef(null)
   const reducedMotion = useReducedMotion()
 
+  // Drawn when the browser is idle – fog layers start invisible, so nothing waits for them.
   useEffect(() => {
-    renderFog(canvasRef.current, { seed, density, falloff, color })
+    const canvas = canvasRef.current
+    return whenIdle(() => renderFog(canvas, { seed, density, falloff, color }))
   }, [seed, density, falloff, color])
 
   useGSAP(

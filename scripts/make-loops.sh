@@ -17,7 +17,63 @@ CLIPS=(
   "skellige-valley|Skellige.mp4|17.7|21.9|2"
   "skellige-lake|Skellige.mp4|320.3|323.6|2"
   "outro-lake-dusk|Skellige.mp4|228.0|231.3|2"
+  # --- storyboard v2 ---
+  "novigrad-port|Velen.mp4|228.0|230.6|1"
+  "novigrad-city|Velen.mp4|189.0|191.6|1"
+  "geralt-reveal|Skellige.mp4|166.4|172.0|2"
+  "choice-light|Velen.mp4|77.5|81.3|1"
+  "choice-dark|Velen.mp4|53.4|57.0|1"
 )
+
+# Montaz (tvrde strihy, bez boomerangu) – nazev | zdroj | "start:delka start:delka ..."
+MONTAGES=(
+  "monsters-montage|Skellige.mp4|114.5:1.5 255.0:1.2 118.6:1.2 262.5:1.2 123.0:1.2 259.0:1.2 276.3:1.6"
+)
+
+# Video rizene scrollem (jen dopredu, hustsi keyframy pro plynule seekovani)
+# nazev | zdroj | start | konec | zpomaleni
+SCRUBS=(
+  "path-ride|Skellige.mp4|324.0|327.3|2"
+)
+
+encode_web() { # $1 = vstup, $2 = nazev, $3 = extra x264 parametry
+  ffmpeg -v error -y -i "$1" -an -c:v libx264 -crf 26 -preset slow $3 \
+    -pix_fmt yuv420p -movflags +faststart "$OUT/$2.mp4"
+  ffmpeg -v error -y -i "$1" -an -c:v libvpx-vp9 -crf 36 -b:v 0 \
+    -row-mt 1 -deadline good -cpu-used 4 "$OUT/$2.webm"
+  ffmpeg -v error -y -i "$1" -an -vf "scale=1280:-2" -c:v libx264 -crf 28 \
+    -preset slow $3 -pix_fmt yuv420p -movflags +faststart "$OUT/$2-720.mp4"
+  ffmpeg -v error -y -i "$1" -frames:v 1 -c:v libwebp -quality 80 "$OUT/$2-poster.webp"
+}
+
+wanted() { [[ -z "${ONLY:-}" || " $ONLY " == *" $1 "* ]]; }
+
+for row in "${MONTAGES[@]}"; do
+  IFS='|' read -r name file cuts <<< "$row"
+  wanted "$name" || continue
+  echo "==> $name (montaz)"
+  tmp="$(mktemp -d)"; list="$tmp/list.txt"; : > "$list"; i=0
+  for c in $cuts; do
+    ffmpeg -v error -y -ss "${c%%:*}" -t "${c##*:}" -i "$SRC/$file" -an \
+      -vf "fps=30,scale=1920:-2" -c:v libx264 -crf 12 -preset veryfast "$tmp/p$i.mp4"
+    echo "file '$tmp/p$i.mp4'" >> "$list"; i=$((i+1))
+  done
+  ffmpeg -v error -y -f concat -safe 0 -i "$list" -c copy "$tmp/loop.mp4"
+  encode_web "$tmp/loop.mp4" "$name" ""
+  rm -rf "$tmp"
+done
+
+for row in "${SCRUBS[@]}"; do
+  IFS='|' read -r name file ss to slow <<< "$row"
+  wanted "$name" || continue
+  echo "==> $name (scrub)"
+  tmp="$(mktemp -d)"
+  ffmpeg -v error -y -ss "$ss" -to "$to" -i "$SRC/$file" -an \
+    -vf "setpts=${slow}*PTS,fps=30,scale=1920:-2" -c:v libx264 -crf 12 -preset veryfast "$tmp/fwd.mp4"
+  # keyframe kazdych 5 snimku -> plynule nastavovani currentTime pri scrollu
+  encode_web "$tmp/fwd.mp4" "$name" "-g 5 -keyint_min 5 -sc_threshold 0"
+  rm -rf "$tmp"
+done
 
 for row in "${CLIPS[@]}"; do
   IFS='|' read -r name file ss to slow <<< "$row"
@@ -43,7 +99,7 @@ for row in "${CLIPS[@]}"; do
   ffmpeg -v error -y -i "$tmp/loop.mp4" -an -c:v libx264 -crf 26 -preset slow \
     -pix_fmt yuv420p -movflags +faststart "$OUT/$name.mp4"
   ffmpeg -v error -y -i "$tmp/loop.mp4" -an -c:v libvpx-vp9 -crf 36 -b:v 0 \
-    -row-mt 1 -deadline good -cpu-used 2 "$OUT/$name.webm"
+    -row-mt 1 -deadline good -cpu-used 4 "$OUT/$name.webm"
   ffmpeg -v error -y -i "$tmp/loop.mp4" -an -vf "scale=1280:-2" -c:v libx264 -crf 28 \
     -preset slow -pix_fmt yuv420p -movflags +faststart "$OUT/$name-720.mp4"
   ffmpeg -v error -y -i "$tmp/loop.mp4" -frames:v 1 -c:v libwebp -quality 80 "$OUT/$name-poster.webp"

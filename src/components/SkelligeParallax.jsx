@@ -4,6 +4,7 @@ import useReducedMotion from '../hooks/useReducedMotion'
 import { gsap, useGSAP } from '../lib/gsap'
 import { createRandom } from '../lib/random'
 import FogCanvas from './FogCanvas'
+import LocationTitle from './LocationTitle'
 import VideoBackground from './VideoBackground'
 
 // Ambient snowfall – each flake falls through its layer and sways (transform only).
@@ -48,8 +49,9 @@ function Snow({ count }) {
   )
 }
 
-// Skellige scene. Animated from Journey: .sk-scene (opacity) and the parallax layers
-// .sk-bg, .sk-fog-far, .sk-snow, .sk-fog-near, .sk-copy (y), .sk-copy-inner (reveal).
+// Skellige scene. Animated from Journey: .sk-scene (opacity, x when sailing away), the parallax
+// layers .sk-bg, .sk-fog-far, .sk-snow, .sk-fog-near, .sk-copy (y), .sk-title (see LocationTitle),
+// .sk-text (reveal) and .sk-copy-inner (fade out).
 export default function SkelligeParallax({ className = '', ...props }) {
   const isMobile = useIsMobile()
   const reducedMotion = useReducedMotion()
@@ -81,10 +83,8 @@ export default function SkelligeParallax({ className = '', ...props }) {
 
       <div className="sk-copy absolute inset-0 flex items-center justify-center px-6">
         <div className="sk-copy-inner text-center">
-          <h2 className="font-display text-[clamp(3rem,11vw,9rem)] leading-none font-bold tracking-[0.12em] text-neutral-100 drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
-            Skellige
-          </h2>
-          <p className="mx-auto mt-6 max-w-xl font-heading text-base tracking-[0.15em] text-neutral-200 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] sm:text-lg md:text-xl">
+          <LocationTitle name="Skellige" subtitle="The Isles" className="sk-title" />
+          <p className="sk-text mx-auto mt-10 max-w-xl font-heading text-base tracking-[0.15em] text-neutral-200 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] sm:text-lg md:text-xl">
             Storm-lashed isles where the sea meets the sword.
           </p>
         </div>

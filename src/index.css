@@ -17,3 +17,26 @@
     @apply bg-black font-sans text-neutral-200 antialiased;
   }
 }
+
+@theme {
+  /* Chapter II plays on this near-black. */
+  --color-dark: #060607;
+}
+
+/* Edges of a chapter II shot dissolve into the dark (~12 % on every side), no hard frame. */
+@utility soft-edges {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 1%, #000 13%, #000 87%, transparent 99%),
+    linear-gradient(to bottom, transparent 1%, #000 13%, #000 87%, transparent 99%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 1%, #000 13%, #000 87%, transparent 99%),
+    linear-gradient(to bottom, transparent 1%, #000 13%, #000 87%, transparent 99%);
+  mask-composite: intersect;
+}
+
+/* Soft top and bottom edges only – for a band across the full width. */
+@utility soft-edges-y {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 1%, #000 18%, #000 82%, transparent 99%);
+  mask-image: linear-gradient(to bottom, transparent 1%, #000 18%, #000 82%, transparent 99%);
+}
