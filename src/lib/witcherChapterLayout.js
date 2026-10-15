@@ -14,6 +14,11 @@ export const CHOICES = CONTRACTS + SCENES.contracts
 export const SCAR = CHOICES + SCENES.choices
 export const LENGTH = SCAR + SCENES.scar
 
+// Moments in each scene's hold the scroll settles on (see breathSnap): Path once its road is
+// drawn, Monsters after the jolt, Contracts right after the seal lands, Choices while the border
+// slides, Scar before the cut. The first one is also where the indicator's "The Witcher" leads.
+export const BREATHS = [PATH + 1.4, MONSTERS + 1.1, CONTRACTS + 2.15, CHOICES + 1.5, SCAR + 1.5]
+
 // Height of the chapter: the sticky stage plus LENGTH screens of scrolling, or one static
 // section per scene with reduced motion.
 export const chapterHeight = (reducedMotion) =>

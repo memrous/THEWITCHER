@@ -1,10 +1,13 @@
 import { useRef } from 'react'
+import { addSoundCues } from '../audio/cues'
+import { setLevel } from '../audio/engine'
 import useIsMobile from '../hooks/useIsMobile'
 import useReducedMotion from '../hooks/useReducedMotion'
+import { breathSnap } from '../lib/breath'
 import { gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
 import { prepareStrokeDraw } from '../lib/stroke'
 import { syncSceneVideos, warmUpVideo } from '../lib/video'
-import { chapterHeight, CHOICES, CONTRACTS, LENGTH, MONSTERS, PATH, SCAR, SCENES } from '../lib/witcherChapterLayout'
+import { BREATHS, chapterHeight, CHOICES, CONTRACTS, LENGTH, MONSTERS, PATH, SCAR, SCENES } from '../lib/witcherChapterLayout'
 import ChoicesScene from './scenes/ChoicesScene'
 import ContractsScene from './scenes/ContractsScene'
 import MonstersScene from './scenes/MonstersScene'
@@ -32,6 +35,31 @@ const PLAY = {
 // Choices: share of the frame for the light shot, at first and at the end.
 const LIGHT_FROM = 65
 const LIGHT_TO = 35
+// …and when the border slides from one to the other (through the hold).
+const SHIFT = { from: CHOICES_AT.emerge + 0.5, duration: CHOICES_AT.vanish - CHOICES_AT.emerge - 0.5 }
+
+// How dark the screen is (0–1): 1 in the pause between scenes, 0 while a scene holds it.
+const SPANS = [
+  [PATH, SCENES.path],
+  [MONSTERS, SCENES.monsters],
+  [CONTRACTS, SCENES.contracts],
+  [CHOICES, SCENES.choices],
+  [SCAR, SCENES.scar],
+]
+function darkness(t) {
+  const span = SPANS.find(([start, length]) => t >= start && t < start + length)
+  if (!span) return 1
+  const local = (t - span[0]) / span[1]
+  if (local < 0.1) return 1
+  if (local < 0.35) return 1 - (local - 0.1) / 0.25
+  if (local <= 0.75) return 0
+  return (local - 0.75) / 0.25
+}
+// In the dark the heartbeat comes forward and the music steps back; a scene turns it around.
+const heartbeatLevel = (t) => 0.55 + 0.45 * darkness(t)
+const musicLevel = (t) => 1 - 0.4 * darkness(t)
+// The fire grows as darkness takes over the frame.
+const fireLevel = (t) => 0.25 + 0.75 * gsap.utils.clamp(0, 1, (t - SHIFT.from) / SHIFT.duration)
 
 // Letters of a word start spread apart (about as if letter-spacing were 0.3em) and close in to the
 // rest spacing (0.02em) – transforms only, in percent of each letter's width so nothing is measured.
@@ -91,11 +119,17 @@ export default function WitcherChapter() {
         { rotation: -0.6, y: -4 },
         { rotation: 0.6, y: 4, duration: 3, ease: 'sine.inOut', repeat: -1, yoyo: true, paused: true },
       )
+      // Re-arms the sound cues (set up at the end, once the timeline exists).
+      let rearmCues = null
       const sync = (self) => {
         const t = self.progress * LENGTH
         // Before the chapter its progress just sits at 0 – no warm-up from there (see below).
         syncSceneVideos(root, t, { warm: Boolean(self.isActive) })
         sway.paused(t < CONTRACTS || t > CHOICES)
+        setLevel('dark-heartbeat', heartbeatLevel(t))
+        setLevel('silver-for-monsters', musicLevel(t))
+        setLevel('choices-fire', fireLevel(t))
+        rearmCues?.(t)
       }
       // The first clip starts loading while chapter I is still ending.
       ScrollTrigger.create({
@@ -105,7 +139,8 @@ export default function WitcherChapter() {
         onEnter: () => warmUpVideo(root.querySelector('.path-scene video')),
       })
 
-      // Only the current scene is visible – each one has an opaque dark background.
+      // Only the current scene is visible. The scenes are see-through: the dark behind them (with its
+      // embers and traces) is DarkWorld, a fixed layer under the page.
       gsap.set(['.monsters-scene', '.contracts-scene', '.choices-scene', '.scar-scene'], { visibility: 'hidden' })
       // Shows a scene at its start and hides it again at its end.
       const showScene = (scene, from, to) =>
@@ -121,6 +156,7 @@ export default function WitcherChapter() {
           end: 'bottom bottom',
           scrub: true,
           invalidateOnRefresh: true,
+          ...(isMobile ? {} : { snap: breathSnap(BREATHS, LENGTH) }),
           onUpdate: sync,
           onRefresh: sync,
         },
@@ -168,7 +204,7 @@ export default function WitcherChapter() {
 
       // 10) Choices. – light holds most of the frame at first; through the hold the border slides
       //     over and darkness wins.
-      const shift = { from: CHOICES_AT.emerge + 0.5, duration: CHOICES_AT.vanish - CHOICES_AT.emerge - 0.5 }
+      const shift = SHIFT
       showScene('.choices-scene', CHOICES, SCAR)
       addEmerge(tl, root, '.choices-scene', CHOICES_AT.emerge)
       tl.fromTo('.choices-sub', { opacity: 0 }, { opacity: 1, duration: 0.4 }, CHOICES_AT.emerge + 0.4)
@@ -208,6 +244,16 @@ export default function WitcherChapter() {
         .to('.scar-lower', { yPercent: 30, opacity: 0, duration: 0.6, ease: 'power2.in' }, cutAt + 0.2)
         .to('.scar-scene .ch-text', { opacity: 0, y: -20, duration: 0.5, ease: 'power1.in' }, cutAt + 0.35)
 
+      // Sound on the key moments – only scrolling down, once per pass – and a short buzz on the
+      // monster's jolt and the seal (Android, only with sound chosen).
+      rearmCues = addSoundCues(tl, [
+        { at: MONSTERS_AT.emerge + 0.55, haptic: true, scene: [MONSTERS, CONTRACTS] },
+        { at: CONTRACTS_AT.emerge, sound: 'paper-rustle', volume: 0.9, scene: [CONTRACTS, CHOICES] },
+        { at: signAt, sound: 'quill-writing', scene: [CONTRACTS, CHOICES] },
+        { at: sealAt + 0.1, sound: 'wax-seal', haptic: true, scene: [CONTRACTS, CHOICES] },
+        { at: cutAt, sound: 'sword-slash', scene: [SCAR, LENGTH - 0.01] },
+      ])
+
       tl.set({}, {}, LENGTH)
 
     },
@@ -229,7 +275,7 @@ export default function WitcherChapter() {
   const scene = 'absolute inset-0'
 
   return (
-    <div ref={ref} className="relative bg-dark" style={{ height: chapterHeight(false) }}>
+    <div ref={ref} className="relative" style={{ height: chapterHeight(false) }}>
       <div className="sticky top-0 h-svh overflow-hidden">
         <PathScene className={scene} data-play={PLAY.path} />
         <MonstersScene className={scene} data-play={PLAY.monsters} />

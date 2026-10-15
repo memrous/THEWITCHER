@@ -10,7 +10,7 @@ import ContractParchment from './ContractParchment'
 // .contract-seal (stamped). .ch-word / .ch-letter / .ch-text as in every scene.
 export default function ContractsScene({ className = '', ...props }) {
   return (
-    <section className={`contracts-scene overflow-hidden bg-dark ${className}`} {...props}>
+    <section className={`contracts-scene overflow-hidden ${className}`} {...props}>
       <div className="ch-text absolute inset-x-6 top-[10%] md:inset-x-auto md:top-[10%] md:left-[6%]">
         <h2 className="font-display text-[clamp(3rem,7vw,7rem)] leading-none font-bold tracking-[0.02em] text-[#e8e4dc] drop-shadow-[0_2px_14px_rgba(0,0,0,0.9)]">
           <SplitLetters text="Contracts." wordClass="ch-word" letterClass="ch-letter" />

@@ -13,7 +13,7 @@ const ROAD = 'M 4 20 C 60 4 110 34 170 20 S 280 6 340 20 S 450 34 510 18 S 570 1
 // the poster with reduced motion).
 export default function PathScene({ className = '', ...props }) {
   return (
-    <section className={`path-scene overflow-hidden bg-dark ${className}`} {...props}>
+    <section className={`path-scene overflow-hidden ${className}`} {...props}>
       <Shot className="inset-x-0 bottom-[6%] h-[60%] md:inset-x-auto md:top-0 md:right-0 md:bottom-auto md:h-[72%] md:w-[70%]">
         <VideoBackground name="path-ride" webm={false} />
       </Shot>

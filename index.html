@@ -10,9 +10,27 @@
     />
     <meta name="theme-color" content="#000000" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" as="image" href="/gate/gate-frame.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/gate/gate-leaf-left.webp" />
+    <link rel="preload" as="image" href="/gate/gate-leaf-right.webp" />
     <link rel="preload" as="image" href="/video/hero-velen-poster.webp" />
   </head>
   <body>
+    <!-- Still first frame of the gate, painted straight from the HTML while the scripts load.
+         Gate.jsx draws the same layers on top and removes this once it is on screen. -->
+    <div id="gate-shell" aria-hidden="true" style="position: fixed; inset: 0; z-index: 80; overflow: hidden; background: #000">
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center">
+        <div style="position: relative; height: 100vh; height: 100svh; aspect-ratio: 1 / 1; flex-shrink: 0">
+          <div style="position: absolute; left: 16.587%; top: 11.404%; width: 66.986%; height: 81.021%">
+            <img src="/gate/gate-leaf-left.webp" alt="" style="position: absolute; left: 0; top: 0; width: 50%; height: 100%" />
+            <img src="/gate/gate-leaf-right.webp" alt="" style="position: absolute; right: 0; top: 0; width: 50%; height: 100%" />
+          </div>
+          <img src="/gate/gate-frame.webp" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%" />
+          <div style="position: absolute; inset: 0; background: linear-gradient(90deg, #000, transparent 18%, transparent 82%, #000)"></div>
+        </div>
+      </div>
+      <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.85) 100%)"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

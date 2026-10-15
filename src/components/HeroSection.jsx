@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import useReducedMotion from '../hooks/useReducedMotion'
+import { whenGateOpen } from '../lib/gate'
 import { gsap, useGSAP } from '../lib/gsap'
 import HeroTitle from './HeroTitle'
 import VideoBackground from './VideoBackground'
@@ -16,7 +17,8 @@ export default function HeroSection({ className = '', ...props }) {
     () => {
       if (reducedMotion) return
 
-      const tl = gsap.timeline({ delay: 0.5 })
+      // Waits for the entry gate (Gate.jsx) – it starts under the light the gate fades from.
+      const tl = gsap.timeline({ paused: true })
       // A black curtain fades away instead of the video fading in, so the poster is painted at once
       // (the browser counts it as the largest paint).
       tl.fromTo('.hero-curtain', { opacity: 1 }, { opacity: 0, duration: 2, ease: 'power1.inOut' }, 0)
@@ -59,6 +61,8 @@ export default function HeroSection({ className = '', ...props }) {
           repeat: -1,
           yoyo: true,
         })
+
+      return whenGateOpen(() => tl.play())
     },
     { scope: ref, dependencies: [reducedMotion], revertOnUpdate: true },
   )

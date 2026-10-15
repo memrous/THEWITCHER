@@ -17,7 +17,7 @@ export default function ChoicesScene({ className = '', play, ...props }) {
   const reducedMotion = useReducedMotion()
 
   return (
-    <section className={`choices-scene overflow-hidden bg-dark ${className}`} {...props}>
+    <section className={`choices-scene overflow-hidden ${className}`} {...props}>
       <div className="ch-text absolute inset-x-6 top-[9%] text-center md:inset-x-0 md:top-[8%]">
         <h2 className="font-display text-[clamp(3rem,7vw,7rem)] leading-none font-bold tracking-[0.02em] text-[#e8e4dc] drop-shadow-[0_2px_14px_rgba(0,0,0,0.9)]">
           <SplitLetters text="Choices." wordClass="ch-word" letterClass="ch-letter" />

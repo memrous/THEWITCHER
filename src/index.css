@@ -11,10 +11,26 @@
   html {
     background-color: #000;
     color-scheme: dark;
+    /* The journey indicator takes the scrollbar's place. */
+    scrollbar-width: none;
   }
 
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* The own cursor (Cursor.jsx) is on – only on devices with a mouse. */
+  @media (pointer: fine) {
+    .has-cursor,
+    .has-cursor * {
+      cursor: none !important;
+    }
+  }
+
+  /* No background of its own: DarkWorld (a fixed layer under the page) shows through chapter II.
+     The html background is black. */
   body {
-    @apply bg-black font-sans text-neutral-200 antialiased;
+    @apply font-sans text-neutral-200 antialiased;
   }
 }
 

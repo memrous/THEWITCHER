@@ -20,7 +20,7 @@ export default function ScarScene({ className = '', play, ...props }) {
   const reducedMotion = useReducedMotion()
 
   return (
-    <section className={`scar-scene overflow-hidden bg-dark ${className}`} {...props}>
+    <section className={`scar-scene overflow-hidden ${className}`} {...props}>
       <Shot className="inset-x-0 top-[22%] h-[45%] md:top-[16%]" edges="y">
         <div
           className="scar-upper absolute inset-0 will-change-transform"

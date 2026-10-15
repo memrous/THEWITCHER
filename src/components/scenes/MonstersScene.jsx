@@ -16,7 +16,7 @@ export default function MonstersScene({ className = '', ...props }) {
   const wide = !isMobile && !reducedMotion
 
   return (
-    <section className={`monsters-scene overflow-hidden bg-dark ${className}`} {...props}>
+    <section className={`monsters-scene overflow-hidden ${className}`} {...props}>
       <Shot
         className="inset-x-0 bottom-[6%] h-[60%] md:inset-x-auto md:top-0 md:bottom-auto md:left-0 md:aspect-[2.39/1] md:h-auto md:w-[min(92%,calc(72svh*2.39))]"
       >

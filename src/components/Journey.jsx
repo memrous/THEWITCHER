@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import useIsMobile from '../hooks/useIsMobile'
 import useReducedMotion from '../hooks/useReducedMotion'
+import { breathSnap } from '../lib/breath'
 import { gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
 import { createMapCamera } from '../lib/mapCamera'
 import { prepareStrokeDraw } from '../lib/stroke'
@@ -13,6 +14,7 @@ import NovigradScene from './NovigradScene'
 import PortScene from './PortScene'
 import SkelligeParallax from './SkelligeParallax'
 import VelenScene from './VelenScene'
+import Waypoint from './Waypoint'
 import WitcherSenses from './WitcherSenses'
 
 // Timeline length in "screens" – one unit = one viewport height of scrolling.
@@ -30,6 +32,12 @@ const PLAY = {
   novigrad: '11.8,15.6',
   senses: '14.3,99',
 }
+
+// Moments the scroll settles on (see breathSnap): each area title with its line of text fully
+// shown, just before it fades. The journey indicator leads to the same moments.
+const BREATHS = { velen: 2.6, skellige: 7.7, novigrad: 13.4 }
+// "But the Continent needs a witcher." is fully shown.
+const SENSES_AT = 15.95
 
 // Letters start spread apart (about as if letter-spacing were 0.6em) and close in to the rest
 // spacing. In percent of each letter's own width (a Cinzel capital is ~0.8em wide) – nothing has to
@@ -113,6 +121,7 @@ export default function Journey() {
           end: 'bottom bottom',
           scrub: true,
           invalidateOnRefresh: true,
+          ...(isMobile ? {} : { snap: breathSnap(Object.values(BREATHS), LENGTH) }),
           onUpdate: sync,
           onRefresh: () => {
             camera.apply()
@@ -252,15 +261,15 @@ export default function Journey() {
 
   if (reducedMotion) {
     return (
-      <div>
+      <div id="journey">
         <HeroSection className="relative h-svh" />
-        <VelenScene className="relative h-svh" />
+        <VelenScene className="relative h-svh" data-waypoint="velen" />
         <FogTransition className="relative h-svh" />
-        <SkelligeParallax className="relative h-svh" />
+        <SkelligeParallax className="relative h-svh" data-waypoint="skellige" />
         <MapTravel className="relative min-h-svh" />
         <PortScene className="relative h-svh" />
-        <NovigradScene className="relative h-svh" />
-        <WitcherSenses className="relative h-svh" />
+        <NovigradScene className="relative h-svh" data-waypoint="novigrad" />
+        <WitcherSenses className="relative h-svh" data-waypoint="senses" />
       </div>
     )
   }
@@ -268,7 +277,11 @@ export default function Journey() {
   const scene = 'absolute inset-0'
 
   return (
-    <div ref={ref} className="relative" style={{ height: `${(LENGTH + 1) * 100}svh` }}>
+    <div ref={ref} id="journey" className="relative" style={{ height: `${(LENGTH + 1) * 100}svh` }}>
+      {Object.entries(BREATHS).map(([id, at]) => (
+        <Waypoint key={id} id={id} at={at} />
+      ))}
+      <Waypoint id="senses" at={SENSES_AT} />
       <div className="journey-stage sticky top-0 h-svh overflow-hidden bg-dark">
         <HeroSection className={scene} data-play={PLAY.hero} />
         <VelenScene className={scene} data-play={PLAY.velen} />
